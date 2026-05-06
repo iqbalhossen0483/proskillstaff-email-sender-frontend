@@ -1,7 +1,14 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  images: {
+    remotePatterns: [
+      {
+        hostname: "iqbal-hossen.vercel.app",
+        protocol: "https",
+      },
+    ],
+  },
 };
 
 export default nextConfig;

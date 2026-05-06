@@ -1,10 +1,10 @@
 "use client";
 
-import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { TemplateEditor } from "@/components/templates/TemplateEditor";
+import { Button } from "@/components/ui/button";
 import { useGetTemplateByIdQuery } from "@/store/api/templatesApi";
+import { ArrowLeft } from "lucide-react";
+import { useParams, useRouter } from "next/navigation";
 
 export default function EditTemplatePage() {
   const { id } = useParams<{ id: string }>();
@@ -30,13 +30,16 @@ export default function EditTemplatePage() {
 
   return (
     <div className="flex flex-col h-screen">
-      <div className="flex items-center gap-3 px-6 py-3 border-b bg-card flex-shrink-0">
-        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => router.back()}>
+      <div className="flex items-center gap-3 px-6 py-3 border-b bg-card shrink-0">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8"
+          onClick={() => router.back()}
+        >
           <ArrowLeft className="h-4 w-4" />
         </Button>
-        <span className="text-sm font-medium">
-          Edit — {template.name}
-        </span>
+        <span className="text-sm font-medium">Edit {template.name}</span>
       </div>
       <div className="flex-1 overflow-hidden">
         <TemplateEditor
