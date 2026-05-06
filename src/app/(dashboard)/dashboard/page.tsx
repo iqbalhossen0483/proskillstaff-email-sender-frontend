@@ -1,37 +1,51 @@
 "use client";
 
-import { useSession } from "next-auth/react";
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  Tooltip,
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
-  Legend,
-} from "recharts";
-import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TableSkeleton } from "@/components/ui/PageLoader";
 import {
-  useGetDashboardStatsQuery,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { staggerContainer, staggerItem } from "@/lib/animations";
+import {
   useGetActivityChartQuery,
+  useGetDashboardStatsQuery,
   useGetLayoutSplitQuery,
-  useGetTopTemplatesQuery,
   useGetRecentSendsQuery,
+  useGetTopTemplatesQuery,
   useGetUserActivityQuery,
 } from "@/store/api/dashboardApi";
-import { staggerContainer, staggerItem, fadeIn } from "@/lib/animations";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { motion } from "framer-motion";
+import { useSession } from "next-auth/react";
 import { useState } from "react";
+import {
+  Bar,
+  BarChart,
+  Cell,
+  Legend,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
 
 const LAYOUT_COLORS = { layoutA: "#2563EB", layoutB: "#7C3AED" };
 
-function StatCard({ label, value, loading }: { label: string; value?: number; loading: boolean }) {
+function StatCard({
+  label,
+  value,
+  loading,
+}: {
+  label: string;
+  value?: number;
+  loading: boolean;
+}) {
   return (
     <Card>
       <CardContent className="pt-6">
@@ -43,7 +57,9 @@ function StatCard({ label, value, loading }: { label: string; value?: number; lo
         ) : (
           <>
             <p className="text-sm text-muted-foreground">{label}</p>
-            <p className="text-3xl font-bold mt-1">{(value ?? 0).toLocaleString()}</p>
+            <p className="text-3xl font-bold mt-1">
+              {(value ?? 0).toLocaleString()}
+            </p>
           </>
         )}
       </CardContent>
@@ -56,15 +72,19 @@ export default function DashboardPage() {
   const isSuperAdmin = session?.user.role === "super_admin";
   const [activityUserId, setActivityUserId] = useState<string>("all");
 
-  const { data: stats, isFetching: statsFetching } = useGetDashboardStatsQuery();
-  const { data: activity, isFetching: activityFetching } = useGetActivityChartQuery(30);
+  const { data: stats, isFetching: statsFetching } =
+    useGetDashboardStatsQuery();
+  const { data: activity, isFetching: activityFetching } =
+    useGetActivityChartQuery(30);
   const { data: layoutSplit } = useGetLayoutSplitQuery();
   const { data: topTemplates } = useGetTopTemplatesQuery();
-  const { data: recentSends, isFetching: recentFetching } = useGetRecentSendsQuery();
-  const { data: userActivity, isFetching: userActivityFetching } = useGetUserActivityQuery(
-    { userId: activityUserId !== "all" ? Number(activityUserId) : undefined },
-    { skip: !isSuperAdmin }
-  );
+  const { data: recentSends, isFetching: recentFetching } =
+    useGetRecentSendsQuery();
+  const { data: userActivity, isFetching: userActivityFetching } =
+    useGetUserActivityQuery(
+      { userId: activityUserId !== "all" ? Number(activityUserId) : undefined },
+      { skip: !isSuperAdmin },
+    );
 
   const pieData = layoutSplit
     ? [
@@ -107,11 +127,25 @@ export default function DashboardPage() {
             ) : (
               <ResponsiveContainer width="100%" height={200}>
                 <BarChart data={activity ?? []}>
-                  <XAxis dataKey="date" tick={{ fontSize: 11 }} tickFormatter={(d) => d.slice(5)} />
+                  <XAxis
+                    dataKey="date"
+                    tick={{ fontSize: 11 }}
+                    tickFormatter={(d) => d.slice(5)}
+                  />
                   <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
                   <Tooltip />
-                  <Bar dataKey="layoutA" name="Layout A" fill={LAYOUT_COLORS.layoutA} stackId="a" />
-                  <Bar dataKey="layoutB" name="Layout B" fill={LAYOUT_COLORS.layoutB} stackId="a" />
+                  <Bar
+                    dataKey="layoutA"
+                    name="Layout A"
+                    fill={LAYOUT_COLORS.layoutA}
+                    stackId="a"
+                  />
+                  <Bar
+                    dataKey="layoutB"
+                    name="Layout B"
+                    fill={LAYOUT_COLORS.layoutB}
+                    stackId="a"
+                  />
                 </BarChart>
               </ResponsiveContainer>
             )}
@@ -124,7 +158,14 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent className="flex justify-center">
             <PieChart width={180} height={180}>
-              <Pie data={pieData} cx={85} cy={85} innerRadius={50} outerRadius={80} dataKey="value">
+              <Pie
+                data={pieData}
+                cx={85}
+                cy={85}
+                innerRadius={50}
+                outerRadius={80}
+                dataKey="value"
+              >
                 <Cell fill={LAYOUT_COLORS.layoutA} />
                 <Cell fill={LAYOUT_COLORS.layoutB} />
               </Pie>
@@ -148,15 +189,22 @@ export default function DashboardPage() {
               <p className="text-sm text-muted-foreground">No sends yet.</p>
             ) : (
               topTemplates.map((t, i) => (
-                <div key={t.id} className="flex items-center justify-between py-1.5 text-sm">
+                <div
+                  key={t.id}
+                  className="flex items-center justify-between py-1.5 text-sm"
+                >
                   <div className="flex items-center gap-2.5">
-                    <span className="w-5 text-muted-foreground font-medium">{i + 1}.</span>
+                    <span className="w-5 text-muted-foreground font-medium">
+                      {i + 1}.
+                    </span>
                     <span className="truncate">{t.name}</span>
                     <Badge variant="outline" className="text-xs">
                       {t.layout?.slug === "layout_a" ? "A" : "B"}
                     </Badge>
                   </div>
-                  <span className="text-muted-foreground tabular-nums">{t.send_count}</span>
+                  <span className="text-muted-foreground tabular-nums">
+                    {t.send_count}
+                  </span>
                 </div>
               ))
             )}
@@ -175,13 +223,24 @@ export default function DashboardPage() {
             ) : (
               <div className="space-y-2">
                 {recentSends.map((s, i) => (
-                  <div key={i} className="flex items-center gap-3 text-sm py-1.5 border-b last:border-0">
+                  <div
+                    key={i}
+                    className="flex items-center gap-3 text-sm py-1.5 border-b last:border-0"
+                  >
                     <div className="flex-1 min-w-0">
                       <p className="truncate font-medium">{s.templateName}</p>
-                      <p className="text-xs text-muted-foreground">{s.sentByName} · {s.recipientEmails.length} recipients</p>
+                      <p className="text-xs text-muted-foreground">
+                        {s.sentByName} · {s.recipientEmails.length} recipients
+                      </p>
                     </div>
                     <Badge
-                      variant={s.status === "sent" ? "default" : s.status === "failed" ? "destructive" : "secondary"}
+                      variant={
+                        s.status === "sent"
+                          ? "default"
+                          : s.status === "failed"
+                            ? "destructive"
+                            : "secondary"
+                      }
                       className="capitalize shrink-0"
                     >
                       {s.status}
@@ -199,7 +258,12 @@ export default function DashboardPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="text-base">User activity</CardTitle>
-            <Select value={activityUserId} onValueChange={(v) => { if (v) setActivityUserId(v); }}>
+            <Select
+              value={activityUserId}
+              onValueChange={(v) => {
+                if (v) setActivityUserId(v);
+              }}
+            >
               <SelectTrigger className="w-44 h-8 text-sm">
                 <SelectValue placeholder="All users" />
               </SelectTrigger>
@@ -230,12 +294,21 @@ export default function DashboardPage() {
                       <tr key={row.id} className="border-b last:border-0">
                         <td className="py-2.5 pr-4">{row.templateName}</td>
                         <td className="py-2.5 pr-4">{row.sentByName}</td>
-                        <td className="py-2.5 pr-4 text-muted-foreground">{row.recipientEmails.length}</td>
+                        <td className="py-2.5 pr-4 text-muted-foreground">
+                          {row.recipientEmails.length}
+                        </td>
                         <td className="py-2.5 pr-4 whitespace-nowrap text-muted-foreground">
-                          {row.sentAt ? new Date(row.sentAt).toLocaleDateString() : "—"}
+                          {row.sentAt
+                            ? new Date(row.sentAt).toLocaleDateString()
+                            : "—"}
                         </td>
                         <td className="py-2.5">
-                          <Badge variant={row.status === "sent" ? "default" : "secondary"} className="capitalize">
+                          <Badge
+                            variant={
+                              row.status === "sent" ? "default" : "secondary"
+                            }
+                            className="capitalize"
+                          >
                             {row.status}
                           </Badge>
                         </td>

@@ -1,12 +1,12 @@
 "use client";
 
-import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Monitor, Smartphone } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { LayoutAPreview } from "@/components/layouts/LayoutAPreview";
 import { LayoutBPreview } from "@/components/layouts/LayoutBPreview";
+import { Button } from "@/components/ui/button";
 import type { LayoutAContent, LayoutBContent } from "@/types/layouts";
+import { AnimatePresence, motion } from "framer-motion";
+import { Monitor, Smartphone } from "lucide-react";
+import { useState } from "react";
 
 type Mode = "desktop" | "mobile";
 
@@ -22,7 +22,9 @@ export function PreviewFrame({ layoutSlug, content }: Props) {
     <div className="flex flex-col h-full">
       {/* Toggle bar */}
       <div className="flex items-center justify-between px-4 py-2 border-b bg-muted/40">
-        <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Preview</span>
+        <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+          Preview
+        </span>
         <div className="flex items-center gap-1">
           <Button
             variant={mode === "desktop" ? "secondary" : "ghost"}

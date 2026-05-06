@@ -1,5 +1,9 @@
 import { baseApi } from "@/store/api/baseApi";
-import type { EmailTemplate, EmailSend, PaginatedResponse } from "@/types/layouts";
+import type {
+  EmailSend,
+  EmailTemplate,
+  PaginatedResponse,
+} from "@/types/layouts";
 
 interface GetTemplatesParams {
   page?: number;
@@ -30,7 +34,10 @@ interface CreateSendDto {
 
 export const templatesApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
-    getTemplates: builder.query<PaginatedResponse<EmailTemplate>, GetTemplatesParams>({
+    getTemplates: builder.query<
+      PaginatedResponse<EmailTemplate>,
+      GetTemplatesParams
+    >({
       query: (params) => ({ url: "/templates", params }),
       providesTags: ["Template"],
     }),
@@ -42,9 +49,19 @@ export const templatesApi = baseApi.injectEndpoints({
       query: (body) => ({ url: "/templates", method: "POST", body }),
       invalidatesTags: ["Template"],
     }),
-    updateTemplate: builder.mutation<EmailTemplate, { id: number; body: UpdateTemplateDto }>({
-      query: ({ id, body }) => ({ url: `/templates/${id}`, method: "PATCH", body }),
-      invalidatesTags: (_r, _e, { id }) => ["Template", { type: "Template", id }],
+    updateTemplate: builder.mutation<
+      EmailTemplate,
+      { id: number; body: UpdateTemplateDto }
+    >({
+      query: ({ id, body }) => ({
+        url: `/templates/${id}`,
+        method: "PATCH",
+        body,
+      }),
+      invalidatesTags: (_r, _e, { id }) => [
+        "Template",
+        { type: "Template", id },
+      ],
     }),
     deleteTemplate: builder.mutation<void, number>({
       query: (id) => ({ url: `/templates/${id}`, method: "DELETE" }),
@@ -61,7 +78,10 @@ export const templatesApi = baseApi.injectEndpoints({
       query: ({ id, ...params }) => ({ url: `/templates/${id}/sends`, params }),
       providesTags: ["Send"],
     }),
-    createSend: builder.mutation<{ sendId: number; status: string }, CreateSendDto>({
+    createSend: builder.mutation<
+      { sendId: number; status: string },
+      CreateSendDto
+    >({
       query: (body) => ({ url: "/sends", method: "POST", body }),
       invalidatesTags: ["Send", "Template"],
     }),

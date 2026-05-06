@@ -1,20 +1,24 @@
 "use client";
 
-import { useForm, useFieldArray, useWatch } from "react-hook-form";
-import { yupResolver } from "@hookform/resolvers/yup";
-import type { Resolver } from "react-hook-form";
-import * as yup from "yup";
-import { useRouter } from "next/navigation";
-import { Plus, Trash2 } from "lucide-react";
-import { toast } from "sonner";
+import { PreviewFrame } from "@/components/layouts/PreviewFrame";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { PreviewFrame } from "@/components/layouts/PreviewFrame";
-import { useCreateTemplateMutation, useUpdateTemplateMutation } from "@/store/api/templatesApi";
 import { VM } from "@/lib/validationMessages";
-import type { LayoutAContent, LayoutBContent, EmailTemplate } from "@/types/layouts";
+import { useCreateTemplateMutation } from "@/store/api/templatesApi";
+import type {
+  EmailTemplate,
+  LayoutAContent,
+  LayoutBContent,
+} from "@/types/layouts";
+import { yupResolver } from "@hookform/resolvers/yup";
+import { Plus, Trash2 } from "lucide-react";
+import { useRouter } from "next/navigation";
+import type { Resolver } from "react-hook-form";
+import { useFieldArray, useForm, useWatch } from "react-hook-form";
+import { toast } from "sonner";
+import * as yup from "yup";
 
 const teamMemberSchema = yup.object({
   name: yup.string().required(VM.required),
@@ -29,11 +33,38 @@ const layoutASchema = yup.object({
   companyName: yup.string().required(VM.required),
   tagline: yup.string().optional(),
   headerBgColor: yup.string().required(VM.required),
-  bodyParagraphs: yup.array(yup.string().required()).min(1, "Add at least one paragraph").required(),
+  bodyParagraphs: yup
+    .array(yup.string().required())
+    .min(1, "Add at least one paragraph")
+    .required(),
   ctaLabel: yup.string().optional(),
-  ctaUrl: yup.string().optional().test("url-or-empty", VM.url, (v) => !v || !v.trim() || (() => { try { new URL(v); return true; } catch { return false; } })()),
+  ctaUrl: yup
+    .string()
+    .optional()
+    .test(
+      "url-or-empty",
+      VM.url,
+      (v) =>
+        !v ||
+        !v.trim() ||
+        (() => {
+          try {
+            new URL(v);
+            return true;
+          } catch {
+            return false;
+          }
+        })(),
+    ),
   teamMembers: yup.array(teamMemberSchema).required(),
-  contactEmail: yup.string().optional().test("email-or-empty", VM.email, (v) => !v || !v.trim() || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)),
+  contactEmail: yup
+    .string()
+    .optional()
+    .test(
+      "email-or-empty",
+      VM.email,
+      (v) => !v || !v.trim() || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v),
+    ),
   contactPhone: yup.string().optional(),
   contactWebsite: yup.string().optional(),
   contactAddress: yup.string().optional(),
@@ -47,11 +78,38 @@ const layoutBSchema = yup.object({
   tagline: yup.string().optional(),
   headerBgColor: yup.string().required(VM.required),
   greetingText: yup.string().optional(),
-  bodyParagraphs: yup.array(yup.string().required()).min(1, "Add at least one paragraph").required(),
+  bodyParagraphs: yup
+    .array(yup.string().required())
+    .min(1, "Add at least one paragraph")
+    .required(),
   ctaLabel: yup.string().optional(),
-  ctaUrl: yup.string().optional().test("url-or-empty", VM.url, (v) => !v || !v.trim() || (() => { try { new URL(v); return true; } catch { return false; } })()),
+  ctaUrl: yup
+    .string()
+    .optional()
+    .test(
+      "url-or-empty",
+      VM.url,
+      (v) =>
+        !v ||
+        !v.trim() ||
+        (() => {
+          try {
+            new URL(v);
+            return true;
+          } catch {
+            return false;
+          }
+        })(),
+    ),
   highlights: yup.array(yup.string().required()).required(),
-  contactEmail: yup.string().optional().test("email-or-empty", VM.email, (v) => !v || !v.trim() || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)),
+  contactEmail: yup
+    .string()
+    .optional()
+    .test(
+      "email-or-empty",
+      VM.email,
+      (v) => !v || !v.trim() || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v),
+    ),
   contactPhone: yup.string().optional(),
   contactWebsite: yup.string().optional(),
   contactAddress: yup.string().optional(),
@@ -59,7 +117,6 @@ const layoutBSchema = yup.object({
 
 type LayoutAFormValues = yup.InferType<typeof layoutASchema>;
 type LayoutBFormValues = yup.InferType<typeof layoutBSchema>;
-type FormValues = LayoutAFormValues | LayoutBFormValues;
 
 interface Props {
   layoutSlug: "layout_a" | "layout_b";
@@ -67,45 +124,64 @@ interface Props {
   existing?: EmailTemplate;
 }
 
-function LayoutAForm({ layoutId }: { layoutId: number; existing?: EmailTemplate }) {
+function LayoutAForm({
+  layoutId,
+}: {
+  layoutId: number;
+  existing?: EmailTemplate;
+}) {
   const router = useRouter();
   const [create] = useCreateTemplateMutation();
-  const [update] = useUpdateTemplateMutation();
 
-  const { register, control, handleSubmit, formState: { errors, isSubmitting } } =
-    useForm<LayoutAFormValues>({
-      resolver: yupResolver(layoutASchema) as Resolver<LayoutAFormValues>,
-      defaultValues: {
-        name: "",
-        description: "",
-        subjectLine: "",
-        companyName: "",
-        tagline: "",
-        headerBgColor: "#2563EB",
-        bodyParagraphs: [""],
-        ctaLabel: "",
-        ctaUrl: "",
-        teamMembers: [],
-        contactEmail: "",
-        contactPhone: "",
-        contactWebsite: "",
-        contactAddress: "",
-      },
-    });
+  const {
+    register,
+    control,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<LayoutAFormValues>({
+    resolver: yupResolver(layoutASchema) as Resolver<LayoutAFormValues>,
+    defaultValues: {
+      name: "",
+      description: "",
+      subjectLine: "",
+      companyName: "",
+      tagline: "",
+      headerBgColor: "#2563EB",
+      bodyParagraphs: [""],
+      ctaLabel: "",
+      ctaUrl: "",
+      teamMembers: [],
+      contactEmail: "",
+      contactPhone: "",
+      contactWebsite: "",
+      contactAddress: "",
+    },
+  });
 
   const watched = useWatch({ control });
 
-  const { fields: paragraphFields, append: addParagraph, remove: removeParagraph } =
-    useFieldArray({ control, name: "bodyParagraphs" as never });
+  const {
+    fields: paragraphFields,
+    append: addParagraph,
+    remove: removeParagraph,
+  } = useFieldArray({ control, name: "bodyParagraphs" as never });
 
-  const { fields: memberFields, append: addMember, remove: removeMember } =
-    useFieldArray({ control, name: "teamMembers" as never });
+  const {
+    fields: memberFields,
+    append: addMember,
+    remove: removeMember,
+  } = useFieldArray({ control, name: "teamMembers" as never });
 
   const onSubmit = async (values: LayoutAFormValues) => {
     const { name, description, ...contentFields } = values;
     const content_json = contentFields as unknown as LayoutAContent;
     try {
-      const result = await create({ name, description, layout_id: layoutId, content_json: content_json as unknown as Record<string, unknown> }).unwrap();
+      const result = await create({
+        name,
+        description,
+        layout_id: layoutId,
+        content_json: content_json as unknown as Record<string, unknown>,
+      }).unwrap();
       toast.success("Template saved");
       router.push(`/templates/${result.id}`);
     } catch {
@@ -121,7 +197,11 @@ function LayoutAForm({ layoutId }: { layoutId: number; existing?: EmailTemplate 
     bodyParagraphs: (watched.bodyParagraphs ?? []) as string[],
     ctaLabel: watched.ctaLabel,
     ctaUrl: watched.ctaUrl,
-    teamMembers: (watched.teamMembers ?? []) as { name: string; title: string; photoUrl?: string }[],
+    teamMembers: (watched.teamMembers ?? []) as {
+      name: string;
+      title: string;
+      photoUrl?: string;
+    }[],
     contactEmail: watched.contactEmail,
     contactPhone: watched.contactPhone,
     contactWebsite: watched.contactWebsite,
@@ -131,15 +211,27 @@ function LayoutAForm({ layoutId }: { layoutId: number; existing?: EmailTemplate 
   return (
     <div className="flex h-full overflow-hidden">
       {/* Form panel */}
-      <form onSubmit={handleSubmit(onSubmit)} className="w-1/2 overflow-y-auto p-6 space-y-5 border-r">
+      <form
+        onSubmit={handleSubmit(onSubmit)}
+        className="w-1/2 overflow-y-auto p-6 space-y-5 border-r"
+      >
         <Section title="Template Info">
           <Field label="Template name" error={errors.name?.message}>
             <Input {...register("name")} placeholder="My Outreach Template" />
           </Field>
           <Field label="Description (optional)">
-            <Input {...register("description")} placeholder="Brief description…" />
+            <Input
+              {...register("description")}
+              placeholder="Brief description…"
+            />
           </Field>
-          <Field label="Subject line" error={(errors as Record<string, {message?: string}>).subjectLine?.message}>
+          <Field
+            label="Subject line"
+            error={
+              (errors as Record<string, { message?: string }>).subjectLine
+                ?.message
+            }
+          >
             <Input {...register("subjectLine")} placeholder="Email subject…" />
           </Field>
         </Section>
@@ -147,7 +239,13 @@ function LayoutAForm({ layoutId }: { layoutId: number; existing?: EmailTemplate 
         <Separator />
 
         <Section title="Header">
-          <Field label="Company name" error={(errors as Record<string, {message?: string}>).companyName?.message}>
+          <Field
+            label="Company name"
+            error={
+              (errors as Record<string, { message?: string }>).companyName
+                ?.message
+            }
+          >
             <Input {...register("companyName")} />
           </Field>
           <Field label="Tagline (optional)">
@@ -155,8 +253,15 @@ function LayoutAForm({ layoutId }: { layoutId: number; existing?: EmailTemplate 
           </Field>
           <Field label="Header background color">
             <div className="flex items-center gap-2">
-              <input type="color" {...register("headerBgColor")} className="h-9 w-14 cursor-pointer rounded border" />
-              <Input {...register("headerBgColor")} className="font-mono text-sm" />
+              <input
+                type="color"
+                {...register("headerBgColor")}
+                className="h-9 w-14 cursor-pointer rounded border"
+              />
+              <Input
+                {...register("headerBgColor")}
+                className="font-mono text-sm"
+              />
             </div>
           </Field>
         </Section>
@@ -172,12 +277,23 @@ function LayoutAForm({ layoutId }: { layoutId: number; existing?: EmailTemplate 
                 className="flex-1 rounded-md border bg-transparent px-3 py-2 text-sm resize-none focus:outline-none focus:ring-1 focus:ring-ring"
                 placeholder={`Paragraph ${i + 1}…`}
               />
-              <Button type="button" variant="ghost" size="icon" className="h-9 w-9 self-start mt-0" onClick={() => removeParagraph(i)}>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="h-9 w-9 self-start mt-0"
+                onClick={() => removeParagraph(i)}
+              >
                 <Trash2 className="h-3.5 w-3.5" />
               </Button>
             </div>
           ))}
-          <Button type="button" variant="outline" size="sm" onClick={() => addParagraph("")}>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => addParagraph("")}
+          >
             <Plus className="h-3.5 w-3.5 mr-1" /> Add paragraph
           </Button>
         </Section>
@@ -188,7 +304,12 @@ function LayoutAForm({ layoutId }: { layoutId: number; existing?: EmailTemplate 
           <Field label="Button label">
             <Input {...register("ctaLabel")} placeholder="Learn More" />
           </Field>
-          <Field label="Button URL" error={(errors as Record<string, {message?: string}>).ctaUrl?.message}>
+          <Field
+            label="Button URL"
+            error={
+              (errors as Record<string, { message?: string }>).ctaUrl?.message
+            }
+          >
             <Input {...register("ctaUrl")} placeholder="https://…" />
           </Field>
         </Section>
@@ -197,25 +318,64 @@ function LayoutAForm({ layoutId }: { layoutId: number; existing?: EmailTemplate 
 
         <Section title="Team members">
           {memberFields.map((f, i) => (
-            <div key={f.id} className="border rounded-md p-3 space-y-2 bg-muted/30">
+            <div
+              key={f.id}
+              className="border rounded-md p-3 space-y-2 bg-muted/30"
+            >
               <div className="flex items-center justify-between">
-                <span className="text-xs font-medium text-muted-foreground">Member {i + 1}</span>
-                <Button type="button" variant="ghost" size="icon" className="h-6 w-6" onClick={() => removeMember(i)}>
+                <span className="text-xs font-medium text-muted-foreground">
+                  Member {i + 1}
+                </span>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="h-6 w-6"
+                  onClick={() => removeMember(i)}
+                >
                   <Trash2 className="h-3.5 w-3.5" />
                 </Button>
               </div>
-              <Field label="Name" error={(errors as Record<string, Record<number, {name?: {message?: string}}>>).teamMembers?.[i]?.name?.message}>
+              <Field
+                label="Name"
+                error={
+                  (
+                    errors as Record<
+                      string,
+                      Record<number, { name?: { message?: string } }>
+                    >
+                  ).teamMembers?.[i]?.name?.message
+                }
+              >
                 <Input {...register(`teamMembers.${i}.name`)} />
               </Field>
-              <Field label="Title" error={(errors as Record<string, Record<number, {title?: {message?: string}}>>).teamMembers?.[i]?.title?.message}>
+              <Field
+                label="Title"
+                error={
+                  (
+                    errors as Record<
+                      string,
+                      Record<number, { title?: { message?: string } }>
+                    >
+                  ).teamMembers?.[i]?.title?.message
+                }
+              >
                 <Input {...register(`teamMembers.${i}.title`)} />
               </Field>
               <Field label="Photo URL (optional)">
-                <Input {...register(`teamMembers.${i}.photoUrl`)} placeholder="https://…" />
+                <Input
+                  {...register(`teamMembers.${i}.photoUrl`)}
+                  placeholder="https://…"
+                />
               </Field>
             </div>
           ))}
-          <Button type="button" variant="outline" size="sm" onClick={() => addMember({ name: "", title: "", photoUrl: "" })}>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => addMember({ name: "", title: "", photoUrl: "" })}
+          >
             <Plus className="h-3.5 w-3.5 mr-1" /> Add team member
           </Button>
         </Section>
@@ -223,7 +383,13 @@ function LayoutAForm({ layoutId }: { layoutId: number; existing?: EmailTemplate 
         <Separator />
 
         <Section title="Contact info (optional)">
-          <Field label="Email" error={(errors as Record<string, {message?: string}>).contactEmail?.message}>
+          <Field
+            label="Email"
+            error={
+              (errors as Record<string, { message?: string }>).contactEmail
+                ?.message
+            }
+          >
             <Input {...register("contactEmail")} type="email" />
           </Field>
           <Field label="Phone">
@@ -252,45 +418,65 @@ function LayoutAForm({ layoutId }: { layoutId: number; existing?: EmailTemplate 
   );
 }
 
-function LayoutBForm({ layoutId }: { layoutId: number; existing?: EmailTemplate }) {
+function LayoutBForm({
+  layoutId,
+}: {
+  layoutId: number;
+  existing?: EmailTemplate;
+}) {
   const router = useRouter();
   const [create] = useCreateTemplateMutation();
 
-  const { register, control, handleSubmit, formState: { errors, isSubmitting } } =
-    useForm<LayoutBFormValues>({
-      resolver: yupResolver(layoutBSchema) as Resolver<LayoutBFormValues>,
-      defaultValues: {
-        name: "",
-        description: "",
-        subjectLine: "",
-        companyName: "",
-        tagline: "",
-        headerBgColor: "#7C3AED",
-        greetingText: "",
-        bodyParagraphs: [""],
-        ctaLabel: "",
-        ctaUrl: "",
-        highlights: [""],
-        contactEmail: "",
-        contactPhone: "",
-        contactWebsite: "",
-        contactAddress: "",
-      },
-    });
+  const {
+    register,
+    control,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<LayoutBFormValues>({
+    resolver: yupResolver(layoutBSchema) as Resolver<LayoutBFormValues>,
+    defaultValues: {
+      name: "",
+      description: "",
+      subjectLine: "",
+      companyName: "",
+      tagline: "",
+      headerBgColor: "#7C3AED",
+      greetingText: "",
+      bodyParagraphs: [""],
+      ctaLabel: "",
+      ctaUrl: "",
+      highlights: [""],
+      contactEmail: "",
+      contactPhone: "",
+      contactWebsite: "",
+      contactAddress: "",
+    },
+  });
 
   const watched = useWatch({ control });
 
-  const { fields: paragraphFields, append: addParagraph, remove: removeParagraph } =
-    useFieldArray({ control, name: "bodyParagraphs" as never });
+  const {
+    fields: paragraphFields,
+    append: addParagraph,
+    remove: removeParagraph,
+  } = useFieldArray({ control, name: "bodyParagraphs" as never });
 
-  const { fields: highlightFields, append: addHighlight, remove: removeHighlight } =
-    useFieldArray({ control, name: "highlights" as never });
+  const {
+    fields: highlightFields,
+    append: addHighlight,
+    remove: removeHighlight,
+  } = useFieldArray({ control, name: "highlights" as never });
 
   const onSubmit = async (values: LayoutBFormValues) => {
     const { name, description, ...contentFields } = values;
     const content_json = contentFields as unknown as LayoutBContent;
     try {
-      const result = await create({ name, description, layout_id: layoutId, content_json: content_json as unknown as Record<string, unknown> }).unwrap();
+      const result = await create({
+        name,
+        description,
+        layout_id: layoutId,
+        content_json: content_json as unknown as Record<string, unknown>,
+      }).unwrap();
       toast.success("Template saved");
       router.push(`/templates/${result.id}`);
     } catch {
@@ -316,7 +502,10 @@ function LayoutBForm({ layoutId }: { layoutId: number; existing?: EmailTemplate 
 
   return (
     <div className="flex h-full overflow-hidden">
-      <form onSubmit={handleSubmit(onSubmit)} className="w-1/2 overflow-y-auto p-6 space-y-5 border-r">
+      <form
+        onSubmit={handleSubmit(onSubmit)}
+        className="w-1/2 overflow-y-auto p-6 space-y-5 border-r"
+      >
         <Section title="Template Info">
           <Field label="Template name" error={errors.name?.message}>
             <Input {...register("name")} placeholder="My Announcement" />
@@ -324,7 +513,13 @@ function LayoutBForm({ layoutId }: { layoutId: number; existing?: EmailTemplate 
           <Field label="Description (optional)">
             <Input {...register("description")} />
           </Field>
-          <Field label="Subject line" error={(errors as Record<string, {message?: string}>).subjectLine?.message}>
+          <Field
+            label="Subject line"
+            error={
+              (errors as Record<string, { message?: string }>).subjectLine
+                ?.message
+            }
+          >
             <Input {...register("subjectLine")} />
           </Field>
         </Section>
@@ -332,7 +527,13 @@ function LayoutBForm({ layoutId }: { layoutId: number; existing?: EmailTemplate 
         <Separator />
 
         <Section title="Header">
-          <Field label="Company name" error={(errors as Record<string, {message?: string}>).companyName?.message}>
+          <Field
+            label="Company name"
+            error={
+              (errors as Record<string, { message?: string }>).companyName
+                ?.message
+            }
+          >
             <Input {...register("companyName")} />
           </Field>
           <Field label="Tagline (optional)">
@@ -340,8 +541,15 @@ function LayoutBForm({ layoutId }: { layoutId: number; existing?: EmailTemplate 
           </Field>
           <Field label="Header background color">
             <div className="flex items-center gap-2">
-              <input type="color" {...register("headerBgColor")} className="h-9 w-14 cursor-pointer rounded border" />
-              <Input {...register("headerBgColor")} className="font-mono text-sm" />
+              <input
+                type="color"
+                {...register("headerBgColor")}
+                className="h-9 w-14 cursor-pointer rounded border"
+              />
+              <Input
+                {...register("headerBgColor")}
+                className="font-mono text-sm"
+              />
             </div>
           </Field>
         </Section>
@@ -350,7 +558,10 @@ function LayoutBForm({ layoutId }: { layoutId: number; existing?: EmailTemplate 
 
         <Section title="Body">
           <Field label="Greeting (optional)">
-            <Input {...register("greetingText")} placeholder="Dear colleagues," />
+            <Input
+              {...register("greetingText")}
+              placeholder="Dear colleagues,"
+            />
           </Field>
           {paragraphFields.map((f, i) => (
             <div key={f.id} className="flex gap-2">
@@ -359,12 +570,23 @@ function LayoutBForm({ layoutId }: { layoutId: number; existing?: EmailTemplate 
                 rows={3}
                 className="flex-1 rounded-md border bg-transparent px-3 py-2 text-sm resize-none focus:outline-none focus:ring-1 focus:ring-ring"
               />
-              <Button type="button" variant="ghost" size="icon" className="h-9 w-9 self-start" onClick={() => removeParagraph(i)}>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="h-9 w-9 self-start"
+                onClick={() => removeParagraph(i)}
+              >
                 <Trash2 className="h-3.5 w-3.5" />
               </Button>
             </div>
           ))}
-          <Button type="button" variant="outline" size="sm" onClick={() => addParagraph("")}>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => addParagraph("")}
+          >
             <Plus className="h-3.5 w-3.5 mr-1" /> Add paragraph
           </Button>
         </Section>
@@ -375,7 +597,12 @@ function LayoutBForm({ layoutId }: { layoutId: number; existing?: EmailTemplate 
           <Field label="Button label">
             <Input {...register("ctaLabel")} />
           </Field>
-          <Field label="Button URL" error={(errors as Record<string, {message?: string}>).ctaUrl?.message}>
+          <Field
+            label="Button URL"
+            error={
+              (errors as Record<string, { message?: string }>).ctaUrl?.message
+            }
+          >
             <Input {...register("ctaUrl")} placeholder="https://…" />
           </Field>
         </Section>
@@ -385,13 +612,27 @@ function LayoutBForm({ layoutId }: { layoutId: number; existing?: EmailTemplate 
         <Section title="Highlights">
           {highlightFields.map((f, i) => (
             <div key={f.id} className="flex gap-2">
-              <Input {...register(`highlights.${i}`)} placeholder={`Highlight ${i + 1}…`} />
-              <Button type="button" variant="ghost" size="icon" className="h-9 w-9" onClick={() => removeHighlight(i)}>
+              <Input
+                {...register(`highlights.${i}`)}
+                placeholder={`Highlight ${i + 1}…`}
+              />
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="h-9 w-9"
+                onClick={() => removeHighlight(i)}
+              >
                 <Trash2 className="h-3.5 w-3.5" />
               </Button>
             </div>
           ))}
-          <Button type="button" variant="outline" size="sm" onClick={() => addHighlight("")}>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => addHighlight("")}
+          >
             <Plus className="h-3.5 w-3.5 mr-1" /> Add highlight
           </Button>
         </Section>
@@ -399,12 +640,24 @@ function LayoutBForm({ layoutId }: { layoutId: number; existing?: EmailTemplate 
         <Separator />
 
         <Section title="Contact info (optional)">
-          <Field label="Email" error={(errors as Record<string, {message?: string}>).contactEmail?.message}>
+          <Field
+            label="Email"
+            error={
+              (errors as Record<string, { message?: string }>).contactEmail
+                ?.message
+            }
+          >
             <Input {...register("contactEmail")} type="email" />
           </Field>
-          <Field label="Phone"><Input {...register("contactPhone")} /></Field>
-          <Field label="Website"><Input {...register("contactWebsite")} /></Field>
-          <Field label="Address"><Input {...register("contactAddress")} /></Field>
+          <Field label="Phone">
+            <Input {...register("contactPhone")} />
+          </Field>
+          <Field label="Website">
+            <Input {...register("contactWebsite")} />
+          </Field>
+          <Field label="Address">
+            <Input {...register("contactAddress")} />
+          </Field>
         </Section>
 
         <div className="pt-2 pb-6">
@@ -421,7 +674,13 @@ function LayoutBForm({ layoutId }: { layoutId: number; existing?: EmailTemplate 
   );
 }
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+function Section({
+  title,
+  children,
+}: {
+  title: string;
+  children: React.ReactNode;
+}) {
   return (
     <div className="space-y-3">
       <p className="text-sm font-semibold text-foreground">{title}</p>
@@ -430,7 +689,15 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   );
 }
 
-function Field({ label, error, children }: { label: string; error?: string; children: React.ReactNode }) {
+function Field({
+  label,
+  error,
+  children,
+}: {
+  label: string;
+  error?: string;
+  children: React.ReactNode;
+}) {
   return (
     <div className="space-y-1">
       <Label className="text-xs text-muted-foreground">{label}</Label>
