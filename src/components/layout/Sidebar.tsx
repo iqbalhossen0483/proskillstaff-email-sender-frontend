@@ -6,6 +6,7 @@ import { useSession, signOut } from "next-auth/react";
 import { LayoutTemplate, BarChart2, Users, LogOut, Mail } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { cn } from "@/lib/utils";
 
 const navItems = [
@@ -66,6 +67,7 @@ export function Sidebar() {
             {session?.user.role === "super_admin" ? "Super Admin" : "Admin"}
           </p>
         </div>
+        <ThemeToggle />
         <Button
           variant="ghost"
           size="icon"
