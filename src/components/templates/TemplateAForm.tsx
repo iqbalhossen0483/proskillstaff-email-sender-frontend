@@ -1,18 +1,22 @@
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Separator } from "@/components/ui/separator";
-import { useCreateTemplateMutation } from "@/store/api/templatesApi";
+import {
+  useCreateTemplateMutation,
+  useUpdateTemplateMutation,
+} from "@/store/api/templatesApi";
+import {
+  useDeleteImageMutation,
+  useUploadImageMutation,
+} from "@/store/api/uploadsApi";
 import { EmailTemplate, LayoutAContent } from "@/types/layouts";
 import { yupResolver } from "@hookform/resolvers/yup";
-import { Plus, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Resolver, useFieldArray, useForm, useWatch } from "react-hook-form";
 import { toast } from "sonner";
-import { PreviewFrame } from "../layouts/PreviewFrame";
-import Field from "./Field";
 import { LayoutAFormValues, layoutASchema } from "./schema";
-import Section from "./Section";
+import { TemplateAFormView } from "./TemplateAFormView";
+
+const ALLOWED_PHOTO_MIME = ["image/jpeg", "image/png", "image/webp"];
+const MAX_PHOTO_SIZE = 5 * 1024 * 1024;
 
 export function LayoutAForm({
   layoutId,
@@ -23,12 +27,20 @@ export function LayoutAForm({
 }) {
   const router = useRouter();
   const [create] = useCreateTemplateMutation();
+  const [update] = useUpdateTemplateMutation();
+  const [uploadImage] = useUploadImageMutation();
+  const [deleteImage] = useDeleteImageMutation();
+  const [uploadingIndices, setUploadingIndices] = useState<Set<number>>(
+    new Set(),
+  );
 
   const {
     register,
     control,
     handleSubmit,
     reset,
+    setValue,
+    getValues,
     formState: { errors, isSubmitting },
   } = useForm<LayoutAFormValues>({
     resolver: yupResolver(layoutASchema) as Resolver<LayoutAFormValues>,
@@ -72,31 +84,105 @@ export function LayoutAForm({
   }, [existing, reset]);
 
   const watched = useWatch({ control });
+  const watchedTeamMembers = (watched.teamMembers ?? []) as {
+    name: string;
+    title: string;
+    photoUrl?: string;
+  }[];
 
   const {
     fields: paragraphFields,
-    append: addParagraph,
+    append: appendParagraph,
     remove: removeParagraph,
   } = useFieldArray({ control, name: "bodyParagraphs" as never });
 
   const {
     fields: memberFields,
-    append: addMember,
+    append: appendMember,
     remove: removeMember,
   } = useFieldArray({ control, name: "teamMembers" as never });
 
+  const onAddParagraph = () => appendParagraph("");
+  const onRemoveParagraph = (index: number) => removeParagraph(index);
+  const onAddMember = () => appendMember({ name: "", title: "", photoUrl: "" });
+  const onRemoveMember = async (index: number) => {
+    const previousUrl = getValues(`teamMembers.${index}.photoUrl`);
+    if (previousUrl) {
+      try {
+        await deleteImage(previousUrl).unwrap();
+      } catch {
+        // Stale or already-deleted URLs are fine to ignore.
+      }
+    }
+    removeMember(index);
+  };
+
+  const setUploading = (index: number, value: boolean) => {
+    setUploadingIndices((prev) => {
+      const next = new Set(prev);
+      if (value) next.add(index);
+      else next.delete(index);
+      return next;
+    });
+  };
+
+  const onMemberPhotoChange = async (index: number, file: File) => {
+    if (!ALLOWED_PHOTO_MIME.includes(file.type)) {
+      toast.error("Only jpeg, png, or webp images are allowed");
+      return;
+    }
+    if (file.size > MAX_PHOTO_SIZE) {
+      toast.error("Image must be under 5 MB");
+      return;
+    }
+
+    const previousUrl = getValues(`teamMembers.${index}.photoUrl`);
+    setUploading(index, true);
+    try {
+      if (previousUrl) {
+        try {
+          await deleteImage(previousUrl).unwrap();
+        } catch {
+          // Stale or already-deleted URLs are fine to ignore.
+        }
+      }
+      const { url } = await uploadImage(file).unwrap();
+      setValue(`teamMembers.${index}.photoUrl`, url, {
+        shouldValidate: true,
+        shouldDirty: true,
+      });
+    } catch {
+      toast.error("Failed to upload image");
+    } finally {
+      setUploading(index, false);
+    }
+  };
+
   const onSubmit = async (values: LayoutAFormValues) => {
     const { name, description, ...contentFields } = values;
-    const content_json = contentFields as unknown as LayoutAContent;
+    const content_json = contentFields;
     try {
-      const result = await create({
-        name,
-        description,
-        layout_id: layoutId,
-        content_json: content_json as unknown as Record<string, unknown>,
-      }).unwrap();
-      toast.success("Template saved");
-      router.push(`/templates/${result.id}`);
+      if (existing) {
+        const result = await update({
+          id: existing.id,
+          body: {
+            name,
+            description,
+            content_json: content_json,
+          },
+        }).unwrap();
+        toast.success("Template saved");
+        router.push(`/templates/${result.id}`);
+      } else {
+        const result = await create({
+          name,
+          description,
+          layout_id: layoutId,
+          content_json: content_json,
+        }).unwrap();
+        toast.success("Template saved");
+        router.push(`/templates/${result.id}`);
+      }
     } catch {
       toast.error("Failed to save template");
     }
@@ -110,11 +196,7 @@ export function LayoutAForm({
     bodyParagraphs: (watched.bodyParagraphs ?? []) as string[],
     ctaLabel: watched.ctaLabel,
     ctaUrl: watched.ctaUrl,
-    teamMembers: (watched.teamMembers ?? []) as {
-      name: string;
-      title: string;
-      photoUrl?: string;
-    }[],
+    teamMembers: watchedTeamMembers,
     contactEmail: watched.contactEmail,
     contactPhone: watched.contactPhone,
     contactWebsite: watched.contactWebsite,
@@ -122,211 +204,21 @@ export function LayoutAForm({
   };
 
   return (
-    <div className="flex h-full overflow-hidden">
-      {/* Form panel */}
-      <form
-        onSubmit={handleSubmit(onSubmit)}
-        className="w-1/2 overflow-y-auto p-6 space-y-5 border-r"
-      >
-        <Section title="Template Info">
-          <Field label="Template name" error={errors.name?.message}>
-            <Input {...register("name")} placeholder="My Outreach Template" />
-          </Field>
-          <Field label="Description (optional)">
-            <Input
-              {...register("description")}
-              placeholder="Brief description…"
-            />
-          </Field>
-          <Field
-            label="Subject line"
-            error={
-              (errors as Record<string, { message?: string }>).subjectLine
-                ?.message
-            }
-          >
-            <Input {...register("subjectLine")} placeholder="Email subject…" />
-          </Field>
-        </Section>
-
-        <Separator />
-
-        <Section title="Header">
-          <Field
-            label="Company name"
-            error={
-              (errors as Record<string, { message?: string }>).companyName
-                ?.message
-            }
-          >
-            <Input {...register("companyName")} />
-          </Field>
-          <Field label="Tagline (optional)">
-            <Input {...register("tagline")} />
-          </Field>
-          <Field label="Header background color">
-            <div className="flex items-center gap-2">
-              <input
-                type="color"
-                {...register("headerBgColor")}
-                className="h-9 w-14 cursor-pointer rounded border"
-              />
-              <Input
-                {...register("headerBgColor")}
-                className="font-mono text-sm"
-              />
-            </div>
-          </Field>
-        </Section>
-
-        <Separator />
-
-        <Section title="Body">
-          {paragraphFields.map((f, i) => (
-            <div key={f.id} className="flex gap-2">
-              <textarea
-                {...register(`bodyParagraphs.${i}`)}
-                rows={3}
-                className="flex-1 rounded-md border bg-transparent px-3 py-2 text-sm resize-none focus:outline-none focus:ring-1 focus:ring-ring"
-                placeholder={`Paragraph ${i + 1}…`}
-              />
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                className="h-9 w-9 self-start mt-0"
-                onClick={() => removeParagraph(i)}
-              >
-                <Trash2 className="h-3.5 w-3.5" />
-              </Button>
-            </div>
-          ))}
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => addParagraph("")}
-          >
-            <Plus className="h-3.5 w-3.5 mr-1" /> Add paragraph
-          </Button>
-        </Section>
-
-        <Separator />
-
-        <Section title="Call to action (optional)">
-          <Field label="Button label">
-            <Input {...register("ctaLabel")} placeholder="Learn More" />
-          </Field>
-          <Field
-            label="Button URL"
-            error={
-              (errors as Record<string, { message?: string }>).ctaUrl?.message
-            }
-          >
-            <Input {...register("ctaUrl")} placeholder="https://…" />
-          </Field>
-        </Section>
-
-        <Separator />
-
-        <Section title="Team members">
-          {memberFields.map((f, i) => (
-            <div
-              key={f.id}
-              className="border rounded-md p-3 space-y-2 bg-muted/30"
-            >
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-medium text-muted-foreground">
-                  Member {i + 1}
-                </span>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="h-6 w-6"
-                  onClick={() => removeMember(i)}
-                >
-                  <Trash2 className="h-3.5 w-3.5" />
-                </Button>
-              </div>
-              <Field
-                label="Name"
-                error={
-                  (
-                    errors as Record<
-                      string,
-                      Record<number, { name?: { message?: string } }>
-                    >
-                  ).teamMembers?.[i]?.name?.message
-                }
-              >
-                <Input {...register(`teamMembers.${i}.name`)} />
-              </Field>
-              <Field
-                label="Title"
-                error={
-                  (
-                    errors as Record<
-                      string,
-                      Record<number, { title?: { message?: string } }>
-                    >
-                  ).teamMembers?.[i]?.title?.message
-                }
-              >
-                <Input {...register(`teamMembers.${i}.title`)} />
-              </Field>
-              <Field label="Photo URL (optional)">
-                <Input
-                  {...register(`teamMembers.${i}.photoUrl`)}
-                  placeholder="https://…"
-                />
-              </Field>
-            </div>
-          ))}
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => addMember({ name: "", title: "", photoUrl: "" })}
-          >
-            <Plus className="h-3.5 w-3.5 mr-1" /> Add team member
-          </Button>
-        </Section>
-
-        <Separator />
-
-        <Section title="Contact info (optional)">
-          <Field
-            label="Email"
-            error={
-              (errors as Record<string, { message?: string }>).contactEmail
-                ?.message
-            }
-          >
-            <Input {...register("contactEmail")} type="email" />
-          </Field>
-          <Field label="Phone">
-            <Input {...register("contactPhone")} />
-          </Field>
-          <Field label="Website">
-            <Input {...register("contactWebsite")} />
-          </Field>
-          <Field label="Address">
-            <Input {...register("contactAddress")} />
-          </Field>
-        </Section>
-
-        <div className="pt-2 pb-6">
-          <Button type="submit" className="w-full" disabled={isSubmitting}>
-            {isSubmitting ? "Saving…" : "Save template"}
-          </Button>
-        </div>
-      </form>
-
-      {/* Preview panel */}
-      <div className="w-1/2 overflow-hidden">
-        <PreviewFrame layoutSlug="layout_a" content={previewContent} />
-      </div>
-    </div>
+    <TemplateAFormView
+      register={register}
+      errors={errors}
+      isSubmitting={isSubmitting}
+      onSubmit={handleSubmit(onSubmit)}
+      paragraphFields={paragraphFields}
+      onAddParagraph={onAddParagraph}
+      onRemoveParagraph={onRemoveParagraph}
+      memberFields={memberFields}
+      onAddMember={onAddMember}
+      onRemoveMember={onRemoveMember}
+      memberPhotoUrls={watchedTeamMembers.map((m) => m.photoUrl ?? "")}
+      uploadingMemberIndices={uploadingIndices}
+      onMemberPhotoChange={onMemberPhotoChange}
+      previewContent={previewContent}
+    />
   );
 }

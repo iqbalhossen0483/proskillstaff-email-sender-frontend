@@ -7,6 +7,10 @@ const nextConfig: NextConfig = {
         hostname: "iqbal-hossen.vercel.app",
         protocol: "https",
       },
+      {
+        hostname: "storage.googleapis.com",
+        protocol: "https",
+      },
     ],
   },
 };

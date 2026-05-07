@@ -60,9 +60,9 @@ export function UserSheet({ open, onOpenChange, user }: Props) {
   } = useForm<FormValues>({
     resolver: yupResolver(schema) as Resolver<FormValues>,
     defaultValues: {
-      name: user?.name ?? "",
-      email: user?.email ?? "",
-      role: user?.role ?? "admin",
+      name: "",
+      email: "",
+      role: "admin",
     },
   });
 

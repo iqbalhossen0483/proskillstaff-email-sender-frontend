@@ -4,7 +4,7 @@ import * as yup from "yup";
 const teamMemberSchema = yup.object({
   name: yup.string().required(VM.required),
   title: yup.string().required(VM.required),
-  photoUrl: yup.string().optional(),
+  photoUrl: yup.string().required(VM.required).url(VM.url),
 });
 
 export const layoutASchema = yup.object({
