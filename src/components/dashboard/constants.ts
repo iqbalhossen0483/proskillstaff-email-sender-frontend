@@ -1,1 +1,4 @@
-export const LAYOUT_COLORS = { layoutA: "#2563EB", layoutB: "#7C3AED" };
+export const LAYOUT_COLORS = {
+  layoutA: "oklch(0.20 0.07 265)",
+  layoutB: "oklch(0.74 0.13 168)",
+};

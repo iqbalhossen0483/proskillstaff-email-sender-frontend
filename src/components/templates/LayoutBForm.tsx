@@ -37,7 +37,7 @@ function LayoutBForm({
       subjectLine: "",
       companyName: "",
       tagline: "",
-      headerBgColor: "#7C3AED",
+      headerBgColor: "#35a287",
       greetingText: "",
       bodyParagraphs: [""],
       ctaLabel: "",

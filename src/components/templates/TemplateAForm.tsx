@@ -38,7 +38,7 @@ export function LayoutAForm({
       subjectLine: "",
       companyName: "",
       tagline: "",
-      headerBgColor: "#2563EB",
+      headerBgColor: "#35a287",
       bodyParagraphs: [""],
       ctaLabel: "",
       ctaUrl: "",
