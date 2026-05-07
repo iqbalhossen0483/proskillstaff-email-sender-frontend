@@ -1,41 +1,42 @@
 "use client";
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { useSession, signOut } from "next-auth/react";
-import { LayoutTemplate, BarChart2, Users, LogOut, Mail } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { cn } from "@/lib/utils";
+import { UserRole } from "@/types/layouts";
+import { BarChart2, LayoutTemplate, LogOut, Users } from "lucide-react";
+import { signOut, useSession } from "next-auth/react";
+import Image from "next/image";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: BarChart2 },
   { href: "/templates", label: "Templates", icon: LayoutTemplate },
 ];
 
-const adminNavItems = [
-  { href: "/users", label: "Users", icon: Users },
-];
+const adminNavItems = [{ href: "/users", label: "Users", icon: Users }];
 
 export function Sidebar() {
   const pathname = usePathname();
   const { data: session } = useSession();
-  const isSuperAdmin = session?.user.role === "super_admin";
+  const isSuperAdmin = session?.user?.role === UserRole.SUPER_ADMIN;
 
-  const initials = session?.user.name
-    ?.split(" ")
-    .map((n) => n[0])
-    .join("")
-    .toUpperCase()
-    .slice(0, 2) ?? "?";
+  const initials =
+    session?.user?.name
+      ?.split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2) ?? "?";
 
   const links = isSuperAdmin ? [...navItems, ...adminNavItems] : navItems;
 
   return (
     <aside className="flex h-full w-60 flex-col border-r bg-card">
       <div className="flex items-center gap-2 px-6 py-5 border-b">
-        <Mail className="h-5 w-5 text-primary" />
+        <Image src="/logo.png" alt="Logo" width={32} height={32} />
         <span className="font-semibold text-sm">Email Sender</span>
       </div>
 
@@ -48,7 +49,7 @@ export function Sidebar() {
               "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
               pathname.startsWith(href)
                 ? "bg-primary text-primary-foreground"
-                : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
             )}
           >
             <Icon className="h-4 w-4" />

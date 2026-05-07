@@ -1,3 +1,13 @@
+export enum UserRole {
+  ADMIN = "admin",
+  SUPER_ADMIN = "super_admin",
+}
+
+export enum UserStatus {
+  ACTIVE = "active",
+  SUSPENDED = "suspended",
+}
+
 export interface TeamMember {
   name: string;
   title: string;
@@ -80,8 +90,8 @@ export interface User {
   id: number;
   name: string;
   email: string;
-  role: "admin" | "super_admin";
-  status: "active" | "suspended";
+  role: UserRole;
+  status: UserStatus;
   created_at: string;
   updated_at: string;
   last_login_at?: string;
