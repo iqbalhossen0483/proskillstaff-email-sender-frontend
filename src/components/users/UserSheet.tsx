@@ -24,6 +24,7 @@ import {
 } from "@/store/api/usersApi";
 import type { User } from "@/types/layouts";
 import { yupResolver } from "@hookform/resolvers/yup";
+import { useEffect } from "react";
 import type { Resolver } from "react-hook-form";
 import { useForm, useWatch } from "react-hook-form";
 import { toast } from "sonner";
@@ -54,6 +55,7 @@ export function UserSheet({ open, onOpenChange, user }: Props) {
     setValue,
     control,
     setError,
+    reset,
     formState: { errors, isSubmitting },
   } = useForm<FormValues>({
     resolver: yupResolver(schema) as Resolver<FormValues>,
@@ -63,6 +65,16 @@ export function UserSheet({ open, onOpenChange, user }: Props) {
       role: user?.role ?? "admin",
     },
   });
+
+  useEffect(() => {
+    if (user) {
+      reset({
+        name: user.name,
+        email: user.email,
+        role: user.role,
+      });
+    }
+  }, [reset, user]);
 
   const roleValue = useWatch({
     control: control,
