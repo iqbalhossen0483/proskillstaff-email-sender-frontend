@@ -1,10 +1,7 @@
 "use client";
 
-import { toast } from "sonner";
 import {
   AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
   AlertDialogFooter,
@@ -12,6 +9,8 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useDeleteTemplateMutation } from "@/store/api/templatesApi";
+import { toast } from "sonner";
+import { Button } from "../ui/button";
 
 interface Props {
   open: boolean;
@@ -21,7 +20,13 @@ interface Props {
   onDeleted?: () => void;
 }
 
-export function DeleteTemplateDialog({ open, onOpenChange, templateId, templateName, onDeleted }: Props) {
+export function DeleteTemplateDialog({
+  open,
+  onOpenChange,
+  templateId,
+  templateName,
+  onDeleted,
+}: Props) {
   const [deleteTemplate, { isLoading }] = useDeleteTemplateMutation();
 
   const handleDelete = async () => {
@@ -41,18 +46,21 @@ export function DeleteTemplateDialog({ open, onOpenChange, templateId, templateN
         <AlertDialogHeader>
           <AlertDialogTitle>Delete template?</AlertDialogTitle>
           <AlertDialogDescription>
-            &ldquo;{templateName}&rdquo; will be archived. Send history is preserved.
+            &ldquo;{templateName}&rdquo; will be archived. Send history is
+            preserved.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <AlertDialogAction
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            Cancel
+          </Button>
+          <Button
+            variant="destructive"
             onClick={handleDelete}
             disabled={isLoading}
-            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
           >
             {isLoading ? "Deleting…" : "Delete"}
-          </AlertDialogAction>
+          </Button>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
