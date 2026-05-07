@@ -60,11 +60,8 @@ export interface EmailTemplate {
 
 export interface EmailSend {
   id: number;
-  template_id: number;
-  templateName?: string;
-  layoutSlug?: string;
-  sent_by: number;
-  sentByName?: string;
+  template?: EmailTemplate;
+  sent_by: User;
   recipient_emails: string[];
   subject: string;
   status: "queued" | "sent" | "failed";

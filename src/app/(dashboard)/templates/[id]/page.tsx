@@ -12,7 +12,6 @@ import {
   useGetTemplateByIdQuery,
   useGetTemplateSendHistoryQuery,
 } from "@/store/api/templatesApi";
-import type { LayoutAContent, LayoutBContent } from "@/types/layouts";
 import { ArrowLeft, Copy, Edit, Send, Trash2 } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
@@ -59,11 +58,6 @@ export default function TemplateDetailPage() {
     );
   }
 
-  const layoutSlug = template.layout?.slug ?? "layout_a";
-  const content = template.content_json as LayoutAContent | LayoutBContent;
-  const subject = (content as unknown as Record<string, unknown>)
-    ?.subjectLine as string | undefined;
-
   return (
     <>
       <div className="flex flex-col h-screen overflow-hidden">
@@ -81,12 +75,13 @@ export default function TemplateDetailPage() {
             <div className="flex items-center gap-2">
               <h1 className="font-semibold truncate">{template.name}</h1>
               <Badge variant="outline" className="text-xs shrink-0">
-                {layoutSlug === "layout_a" ? "Layout A" : "Layout B"}
+                {template.layout?.name}
               </Badge>
             </div>
             <p className="text-xs text-muted-foreground mt-0.5">
-              {template.send_count} sends · by {template.createdBy?.name ?? "—"}{" "}
-              · {new Date(template.updated_at).toLocaleDateString()}
+              {template.send_count} sends · by{" "}
+              {template.created_by?.name ?? "—"} ·{" "}
+              {new Date(template.updated_at).toLocaleDateString()}
             </p>
           </div>
           <div className="flex items-center gap-1.5">
@@ -126,8 +121,8 @@ export default function TemplateDetailPage() {
 
           <TabsContent value="preview" className="flex-1 overflow-hidden mt-0">
             <PreviewFrame
-              layoutSlug={layoutSlug as "layout_a" | "layout_b"}
-              content={content}
+              layoutSlug={template.layout.slug}
+              content={template.content_json}
             />
           </TabsContent>
 
@@ -151,29 +146,31 @@ export default function TemplateDetailPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {sendHistory.data.map((s) => (
-                      <tr key={s.id} className="border-b last:border-0">
+                    {sendHistory.data.map((send) => (
+                      <tr key={send.id} className="border-b last:border-0">
                         <td className="py-3 pr-4 whitespace-nowrap">
-                          {s.sent_at
-                            ? new Date(s.sent_at).toLocaleString()
+                          {send.sent_at
+                            ? new Date(send.sent_at).toLocaleString()
                             : "—"}
                         </td>
-                        <td className="py-3 pr-4">{s.sentByName ?? "—"}</td>
+                        <td className="py-3 pr-4">
+                          {send.sent_by.name ?? "—"}
+                        </td>
                         <td className="py-3 pr-4 text-muted-foreground">
-                          {s.recipient_emails.join(", ")}
+                          {send.recipient_emails.join(", ")}
                         </td>
                         <td className="py-3 pr-4">
                           <Badge
                             variant={
-                              s.status === "sent"
+                              send.status === "sent"
                                 ? "default"
-                                : s.status === "failed"
+                                : send.status === "failed"
                                   ? "destructive"
                                   : "secondary"
                             }
                             className="capitalize"
                           >
-                            {s.status}
+                            {send.status}
                           </Badge>
                         </td>
                       </tr>
@@ -197,7 +194,7 @@ export default function TemplateDetailPage() {
         open={showSend}
         onOpenChange={setShowSend}
         templateId={template.id}
-        defaultSubject={subject}
+        defaultSubject={template.content_json.subjectLine}
       />
     </>
   );
