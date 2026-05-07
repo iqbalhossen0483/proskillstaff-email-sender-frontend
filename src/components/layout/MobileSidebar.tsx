@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
-import { Menu } from "lucide-react";
+import { Sidebar } from "@/components/layout/Sidebar";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { Sidebar } from "@/components/layout/Sidebar";
+import { Menu } from "lucide-react";
+import { useState } from "react";
 
 export function MobileSidebar() {
   const [open, setOpen] = useState(false);
@@ -17,7 +17,7 @@ export function MobileSidebar() {
         >
           <Menu className="h-4 w-4" />
         </SheetTrigger>
-        <SheetContent side="left" className="p-0 w-60">
+        <SheetContent side="left" className="p-0">
           <Sidebar />
         </SheetContent>
       </Sheet>

@@ -8,13 +8,21 @@ export const fadeIn: Variants = {
 
 export const slideInRight: Variants = {
   hidden: { x: "100%", opacity: 0 },
-  visible: { x: 0, opacity: 1, transition: { type: "spring", damping: 25, stiffness: 200 } },
+  visible: {
+    x: 0,
+    opacity: 1,
+    transition: { type: "spring", damping: 25, stiffness: 200 },
+  },
   exit: { x: "100%", opacity: 0, transition: { duration: 0.2 } },
 };
 
 export const slideInLeft: Variants = {
   hidden: { x: "-100%", opacity: 0 },
-  visible: { x: 0, opacity: 1, transition: { type: "spring", damping: 25, stiffness: 200 } },
+  visible: {
+    x: 0,
+    opacity: 1,
+    transition: { type: "spring", damping: 25, stiffness: 200 },
+  },
   exit: { x: "-100%", opacity: 0, transition: { duration: 0.2 } },
 };
 
