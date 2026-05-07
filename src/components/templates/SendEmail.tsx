@@ -12,10 +12,11 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { VM } from "@/lib/validationMessages";
+import { useParseEmailsCsvMutation } from "@/store/api/csvApi";
 import { useCreateSendMutation } from "@/store/api/templatesApi";
 import { yupResolver } from "@hookform/resolvers/yup";
-import { X } from "lucide-react";
-import { KeyboardEvent, useState } from "react";
+import { Upload, X } from "lucide-react";
+import { ChangeEvent, KeyboardEvent, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import * as yup from "yup";
@@ -42,7 +43,10 @@ export function SendEmail({
 }: Props) {
   const [recipients, setRecipients] = useState<string[]>([]);
   const [recipientError, setRecipientError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [createSend, { isLoading }] = useCreateSendMutation();
+  const [parseEmailsCsv, { isLoading: isParsing }] =
+    useParseEmailsCsvMutation();
 
   const {
     register,
@@ -79,6 +83,37 @@ export function SendEmail({
     if (e.key === "Enter" || e.key === ",") {
       e.preventDefault();
       addRecipient();
+    }
+  };
+
+  const handleCsvChange = async (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+
+    try {
+      const result = await parseEmailsCsv(file).unwrap();
+      const existing = new Set(recipients);
+      const added: string[] = [];
+      for (const email of result.emails) {
+        if (!existing.has(email)) {
+          existing.add(email);
+          added.push(email);
+        }
+      }
+      if (added.length > 0) {
+        setRecipients((prev) => [...prev, ...added]);
+        setRecipientError(null);
+      }
+
+      const skippedDuplicates =
+        result.duplicateRows + (result.emails.length - added.length);
+      const parts = [`${added.length} added`];
+      if (skippedDuplicates > 0) parts.push(`${skippedDuplicates} duplicate`);
+      if (result.invalidRows > 0) parts.push(`${result.invalidRows} invalid`);
+      toast.success(`CSV parsed: ${parts.join(", ")}`);
+    } catch {
+      toast.error("Failed to parse CSV file");
     }
   };
 
@@ -121,6 +156,28 @@ export function SendEmail({
               <Button type="button" variant="outline" onClick={addRecipient}>
                 Add
               </Button>
+            </div>
+            <div className="flex items-center gap-2 pt-1">
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".csv,text/csv"
+                className="hidden"
+                onChange={handleCsvChange}
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                disabled={isParsing}
+                onClick={() => fileInputRef.current?.click()}
+              >
+                <Upload className="h-3.5 w-3.5 mr-1.5" />
+                {isParsing ? "Parsing…" : "Upload CSV"}
+              </Button>
+              <span className="text-xs text-muted-foreground">
+                Single column of emails, max 5 MB
+              </span>
             </div>
             {recipientError && (
               <p className="text-xs text-destructive">{recipientError}</p>
