@@ -1,11 +1,10 @@
 "use client";
 
-import { useState, useCallback } from "react";
-import { useRouter } from "next/navigation";
-import { Plus, Search } from "lucide-react";
-import { motion } from "framer-motion";
-import { Input } from "@/components/ui/input";
+import { TemplateCard } from "@/components/templates/TemplateCard";
 import { Button } from "@/components/ui/button";
+import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
+import { Input } from "@/components/ui/input";
+import { CardSkeleton } from "@/components/ui/PageLoader";
 import {
   Select,
   SelectContent,
@@ -13,12 +12,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { TemplateCard } from "@/components/templates/TemplateCard";
-import { CardSkeleton } from "@/components/ui/PageLoader";
-import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
-import { useGetTemplatesQuery } from "@/store/api/templatesApi";
-import { staggerContainer, staggerItem } from "@/lib/animations";
 import { useDebounce } from "@/hooks/useDebounce";
+import { staggerContainer, staggerItem } from "@/lib/animations";
+import { useGetTemplatesQuery } from "@/store/api/templatesApi";
+import { motion } from "framer-motion";
+import { Plus, Search } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 export default function TemplatesPage() {
   const router = useRouter();
@@ -31,7 +31,8 @@ export default function TemplatesPage() {
     page,
     limit: 12,
     search: debouncedSearch || undefined,
-    layout_id: layoutFilter === "all" ? undefined : layoutFilter === "layout_a" ? 1 : 2,
+    layout_id:
+      layoutFilter === "all" ? undefined : layoutFilter === "layout_a" ? 1 : 2,
   });
 
   const templates = data?.data ?? [];
@@ -55,10 +56,21 @@ export default function TemplatesPage() {
             className="pl-9"
             placeholder="Search templates…"
             value={search}
-            onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setPage(1);
+            }}
           />
         </div>
-        <Select value={layoutFilter} onValueChange={(v) => { if (v) { setLayoutFilter(v); setPage(1); } }}>
+        <Select
+          value={layoutFilter}
+          onValueChange={(v) => {
+            if (v) {
+              setLayoutFilter(v);
+              setPage(1);
+            }
+          }}
+        >
           <SelectTrigger className="w-44">
             <SelectValue placeholder="Layout" />
           </SelectTrigger>
@@ -74,13 +86,17 @@ export default function TemplatesPage() {
       <ErrorBoundary>
         {isFetching ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {Array.from({ length: 6 }).map((_, i) => <CardSkeleton key={i} />)}
+            {Array.from({ length: 6 }).map((_, i) => (
+              <CardSkeleton key={i} />
+            ))}
           </div>
         ) : templates.length === 0 ? (
           <div className="text-center py-20 text-muted-foreground">
             <p className="text-lg font-medium">No templates found</p>
             <p className="text-sm mt-1">
-              {search ? "Try a different search." : "Create your first template to get started."}
+              {search
+                ? "Try a different search."
+                : "Create your first template to get started."}
             </p>
           </div>
         ) : (
@@ -102,11 +118,23 @@ export default function TemplatesPage() {
       {/* Pagination */}
       {totalPages > 1 && (
         <div className="flex items-center justify-center gap-2">
-          <Button variant="outline" size="sm" disabled={page === 1} onClick={() => setPage(p => p - 1)}>
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={page === 1}
+            onClick={() => setPage((p) => p - 1)}
+          >
             Previous
           </Button>
-          <span className="text-sm text-muted-foreground">Page {page} of {totalPages}</span>
-          <Button variant="outline" size="sm" disabled={page === totalPages} onClick={() => setPage(p => p + 1)}>
+          <span className="text-sm text-muted-foreground">
+            Page {page} of {totalPages}
+          </span>
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={page === totalPages}
+            onClick={() => setPage((p) => p + 1)}
+          >
             Next
           </Button>
         </div>

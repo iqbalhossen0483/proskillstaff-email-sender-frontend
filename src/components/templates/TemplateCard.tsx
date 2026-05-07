@@ -1,22 +1,15 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { MoreHorizontal, Edit, Copy, Trash2, Send } from "lucide-react";
-import { toast } from "sonner";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { DeleteTemplateDialog } from "@/components/templates/DeleteTemplateDialog";
-import { SendDrawer } from "@/components/templates/SendDrawer";
+import { SendEmail } from "@/components/templates/SendEmail";
+import { Badge } from "@/components/ui/badge";
 import { useDuplicateTemplateMutation } from "@/store/api/templatesApi";
 import type { EmailTemplate } from "@/types/layouts";
+import { Clock, FileText, SendHorizonal, User } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { toast } from "sonner";
+import TemplateMenus from "./TemplateMenus";
 
 interface Props {
   template: EmailTemplate;
@@ -36,9 +29,13 @@ export function TemplateCard({ template }: Props) {
       toast.error("Failed to duplicate template");
     }
   };
+  const handleSend = () => {
+    setShowSend(true);
+  };
 
-  const layoutLabel = template.layout?.slug === "layout_a" ? "Layout A" : "Layout B";
-  const subject = (template.content_json as unknown as Record<string, unknown>)?.subjectLine as string | undefined;
+  const handleDelete = () => {
+    setShowDelete(true);
+  };
 
   return (
     <>
@@ -47,47 +44,46 @@ export function TemplateCard({ template }: Props) {
         onClick={() => router.push(`/templates/${template.id}`)}
       >
         <div className="flex items-start justify-between gap-2">
-          <div className="flex-1 min-w-0">
-            <p className="font-medium truncate">{template.name}</p>
-            {template.description && (
-              <p className="text-xs text-muted-foreground mt-0.5 truncate">{template.description}</p>
-            )}
+          <div className="flex items-center gap-2 flex-1 min-w-0">
+            <div className="shrink-0 flex items-center justify-center w-8 h-8 rounded-md bg-primary/10 text-primary">
+              <FileText className="w-4 h-4" />
+            </div>
+            <div className="min-w-0">
+              <p className="font-medium truncate capitalize">{template.name}</p>
+              {template.description && (
+                <p className="text-sm text-muted-foreground mt-1 truncate">
+                  {template.description}
+                </p>
+              )}
+            </div>
           </div>
-          <div onClick={(e) => e.stopPropagation()}>
-            <DropdownMenu>
-              <DropdownMenuTrigger render={<Button variant="ghost" size="icon" className="h-7 w-7 -mr-1 -mt-1" />}>
-                <MoreHorizontal className="h-4 w-4" />
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => router.push(`/templates/${template.id}/edit`)}>
-                  <Edit className="h-3.5 w-3.5 mr-2" /> Edit
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={handleDuplicate}>
-                  <Copy className="h-3.5 w-3.5 mr-2" /> Duplicate
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setShowSend(true)}>
-                  <Send className="h-3.5 w-3.5 mr-2" /> Send
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  onClick={() => setShowDelete(true)}
-                  className="text-destructive focus:text-destructive"
-                >
-                  <Trash2 className="h-3.5 w-3.5 mr-2" /> Delete
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
+          <TemplateMenus
+            onDeleted={handleDelete}
+            onDuplicate={handleDuplicate}
+            onSend={handleSend}
+            templateId={template.id}
+          />
         </div>
 
         <div className="flex items-center gap-2 flex-wrap">
-          <Badge variant="outline" className="text-xs">{layoutLabel}</Badge>
-          <span className="text-xs text-muted-foreground">{template.send_count} sends</span>
+          <Badge variant="outline" className="text-xs">
+            {template.layout.name}
+          </Badge>
+          <span className="flex items-center gap-1 text-xs text-muted-foreground">
+            <SendHorizonal className="w-3 h-3" />
+            {template.send_count} sends
+          </span>
         </div>
 
         <div className="flex items-center justify-between text-xs text-muted-foreground">
-          <span>{template.createdBy?.name ?? "—"}</span>
-          <span>{new Date(template.updated_at).toLocaleDateString()}</span>
+          <span className="flex items-center gap-1">
+            <User className="w-3 h-3" />
+            {template.created_by?.name ?? "—"}
+          </span>
+          <span className="flex items-center gap-1">
+            <Clock className="w-3 h-3" />
+            {new Date(template.updated_at).toLocaleDateString()}
+          </span>
         </div>
       </div>
 
@@ -97,11 +93,11 @@ export function TemplateCard({ template }: Props) {
         templateId={template.id}
         templateName={template.name}
       />
-      <SendDrawer
+      <SendEmail
         open={showSend}
         onOpenChange={setShowSend}
         templateId={template.id}
-        defaultSubject={subject}
+        defaultSubject={template.content_json.subjectLine}
       />
     </>
   );

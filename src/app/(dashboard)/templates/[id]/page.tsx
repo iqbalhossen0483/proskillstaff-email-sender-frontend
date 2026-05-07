@@ -2,7 +2,7 @@
 
 import { PreviewFrame } from "@/components/layouts/PreviewFrame";
 import { DeleteTemplateDialog } from "@/components/templates/DeleteTemplateDialog";
-import { SendDrawer } from "@/components/templates/SendDrawer";
+import { SendEmail } from "@/components/templates/SendEmail";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { TableSkeleton } from "@/components/ui/PageLoader";
@@ -193,7 +193,7 @@ export default function TemplateDetailPage() {
         templateName={template.name}
         onDeleted={() => router.push("/templates")}
       />
-      <SendDrawer
+      <SendEmail
         open={showSend}
         onOpenChange={setShowSend}
         templateId={template.id}

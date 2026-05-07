@@ -1,24 +1,24 @@
 "use client";
 
-import { useState, KeyboardEvent } from "react";
-import { useForm, Controller } from "react-hook-form";
-import { yupResolver } from "@hookform/resolvers/yup";
-import * as yup from "yup";
-import { X } from "lucide-react";
-import { toast } from "sonner";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetFooter,
-} from "@/components/ui/sheet";
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { useCreateSendMutation } from "@/store/api/templatesApi";
 import { VM } from "@/lib/validationMessages";
+import { useCreateSendMutation } from "@/store/api/templatesApi";
+import { yupResolver } from "@hookform/resolvers/yup";
+import { X } from "lucide-react";
+import { KeyboardEvent, useState } from "react";
+import { useForm } from "react-hook-form";
+import { toast } from "sonner";
+import * as yup from "yup";
 
 const schema = yup.object({
   subject: yup.string().required(VM.required),
@@ -34,12 +34,23 @@ interface Props {
   defaultSubject?: string;
 }
 
-export function SendDrawer({ open, onOpenChange, templateId, defaultSubject = "" }: Props) {
+export function SendEmail({
+  open,
+  onOpenChange,
+  templateId,
+  defaultSubject = "",
+}: Props) {
   const [recipients, setRecipients] = useState<string[]>([]);
   const [recipientError, setRecipientError] = useState<string | null>(null);
   const [createSend, { isLoading }] = useCreateSendMutation();
 
-  const { register, handleSubmit, getValues, setValue, formState: { errors } } = useForm<FormValues>({
+  const {
+    register,
+    handleSubmit,
+    getValues,
+    setValue,
+    formState: { errors },
+  } = useForm<FormValues>({
     resolver: yupResolver(schema),
     defaultValues: { subject: defaultSubject, recipientInput: "" },
   });
@@ -91,13 +102,13 @@ export function SendDrawer({ open, onOpenChange, templateId, defaultSubject = ""
   };
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="w-full sm:max-w-md flex flex-col">
-        <SheetHeader>
-          <SheetTitle>Send Email</SheetTitle>
-        </SheetHeader>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Send Email</DialogTitle>
+        </DialogHeader>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="flex-1 flex flex-col gap-5 py-4">
+        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-5">
           <div className="space-y-1.5">
             <Label>Recipients</Label>
             <div className="flex gap-2">
@@ -111,13 +122,19 @@ export function SendDrawer({ open, onOpenChange, templateId, defaultSubject = ""
                 Add
               </Button>
             </div>
-            {recipientError && <p className="text-xs text-destructive">{recipientError}</p>}
+            {recipientError && (
+              <p className="text-xs text-destructive">{recipientError}</p>
+            )}
             {recipients.length > 0 && (
               <div className="flex flex-wrap gap-1.5 mt-2">
                 {recipients.map((r) => (
                   <Badge key={r} variant="secondary" className="gap-1 pr-1">
                     {r}
-                    <button type="button" onClick={() => removeRecipient(r)} className="hover:text-destructive">
+                    <button
+                      type="button"
+                      onClick={() => removeRecipient(r)}
+                      className="hover:text-destructive"
+                    >
                       <X className="h-3 w-3" />
                     </button>
                   </Badge>
@@ -129,19 +146,27 @@ export function SendDrawer({ open, onOpenChange, templateId, defaultSubject = ""
           <div className="space-y-1.5">
             <Label htmlFor="subject">Subject</Label>
             <Input id="subject" {...register("subject")} />
-            {errors.subject && <p className="text-xs text-destructive">{errors.subject.message}</p>}
+            {errors.subject && (
+              <p className="text-xs text-destructive">
+                {errors.subject.message}
+              </p>
+            )}
           </div>
 
-          <SheetFooter className="mt-auto">
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+            >
               Cancel
             </Button>
             <Button type="submit" disabled={isLoading}>
               {isLoading ? "Sending…" : "Send"}
             </Button>
-          </SheetFooter>
+          </DialogFooter>
         </form>
-      </SheetContent>
-    </Sheet>
+      </DialogContent>
+    </Dialog>
   );
 }

@@ -51,8 +51,7 @@ export interface EmailTemplate {
   layout_id: number;
   layout: Layout;
   content_json: LayoutContent;
-  created_by: number;
-  createdBy?: { id: number; name: string };
+  created_by?: User;
   created_at: string;
   updated_at: string;
   deleted_at?: string;
