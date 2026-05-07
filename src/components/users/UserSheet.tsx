@@ -1,20 +1,15 @@
 "use client";
 
-import { useForm } from "react-hook-form";
-import { yupResolver } from "@hookform/resolvers/yup";
-import type { Resolver } from "react-hook-form";
-import * as yup from "yup";
-import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
@@ -22,9 +17,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useCreateUserMutation, useUpdateUserMutation } from "@/store/api/usersApi";
 import { VM } from "@/lib/validationMessages";
+import {
+  useCreateUserMutation,
+  useUpdateUserMutation,
+} from "@/store/api/usersApi";
 import type { User } from "@/types/layouts";
+import { yupResolver } from "@hookform/resolvers/yup";
+import type { Resolver } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
+import { toast } from "sonner";
+import * as yup from "yup";
 
 const schema = yup.object({
   name: yup.string().required(VM.required),
@@ -49,7 +52,7 @@ export function UserSheet({ open, onOpenChange, user }: Props) {
     register,
     handleSubmit,
     setValue,
-    watch,
+    control,
     setError,
     formState: { errors, isSubmitting },
   } = useForm<FormValues>({
@@ -61,14 +64,21 @@ export function UserSheet({ open, onOpenChange, user }: Props) {
     },
   });
 
-  const roleValue = watch("role");
+  const roleValue = useWatch({
+    control: control,
+    name: "role",
+  });
 
   const onSubmit = async (values: FormValues) => {
     try {
       if (isEdit && user) {
         await updateUser({
           id: user.id,
-          body: { name: values.name, email: values.email, role: values.role as "admin" | "super_admin" },
+          body: {
+            name: values.name,
+            email: values.email,
+            role: values.role as "admin" | "super_admin",
+          },
         }).unwrap();
         toast.success("User updated");
       } else {
@@ -97,22 +107,43 @@ export function UserSheet({ open, onOpenChange, user }: Props) {
           <DialogTitle>{isEdit ? "Edit user" : "Create user"}</DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-5 py-2">
+        <form
+          onSubmit={handleSubmit(onSubmit)}
+          className="flex flex-col gap-5 py-2"
+        >
           <div className="space-y-1.5">
             <Label htmlFor="name">Full name</Label>
-            <Input id="name" {...register("name")} />
-            {errors.name && <p className="text-xs text-destructive">{errors.name.message}</p>}
+            <Input
+              id="name"
+              {...register("name")}
+              placeholder="Enter user name"
+            />
+            {errors.name && (
+              <p className="text-xs text-destructive">{errors.name.message}</p>
+            )}
           </div>
 
           <div className="space-y-1.5">
             <Label htmlFor="email">Email</Label>
-            <Input id="email" type="email" {...register("email")} />
-            {errors.email && <p className="text-xs text-destructive">{errors.email.message}</p>}
+            <Input
+              id="email"
+              type="email"
+              {...register("email")}
+              placeholder="Enter user email"
+            />
+            {errors.email && (
+              <p className="text-xs text-destructive">{errors.email.message}</p>
+            )}
           </div>
 
           <div className="space-y-1.5">
             <Label>Role</Label>
-            <Select value={roleValue} onValueChange={(v) => { if (v) setValue("role", v as "admin" | "super_admin"); }}>
+            <Select
+              value={roleValue}
+              onValueChange={(v) => {
+                if (v) setValue("role", v as "admin" | "super_admin");
+              }}
+            >
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
@@ -121,15 +152,25 @@ export function UserSheet({ open, onOpenChange, user }: Props) {
                 <SelectItem value="super_admin">Super Admin</SelectItem>
               </SelectContent>
             </Select>
-            {errors.role && <p className="text-xs text-destructive">{errors.role.message}</p>}
+            {errors.role && (
+              <p className="text-xs text-destructive">{errors.role.message}</p>
+            )}
           </div>
 
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+            >
               Cancel
             </Button>
             <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? "Saving…" : isEdit ? "Save changes" : "Create user"}
+              {isSubmitting
+                ? "Saving…"
+                : isEdit
+                  ? "Save changes"
+                  : "Create user"}
             </Button>
           </DialogFooter>
         </form>

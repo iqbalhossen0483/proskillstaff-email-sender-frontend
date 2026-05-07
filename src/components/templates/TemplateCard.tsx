@@ -9,6 +9,7 @@ import { Clock, FileText, SendHorizonal, User } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
+import { Button } from "../ui/button";
 import TemplateMenus from "./TemplateMenus";
 
 interface Props {
@@ -45,9 +46,9 @@ export function TemplateCard({ template }: Props) {
       >
         <div className="flex items-start justify-between gap-2">
           <div className="flex items-center gap-2 flex-1 min-w-0">
-            <div className="shrink-0 flex items-center justify-center w-8 h-8 rounded-md bg-primary/10 text-primary">
+            <Button variant="ghost" size="icon">
               <FileText className="w-4 h-4" />
-            </div>
+            </Button>
             <div className="min-w-0">
               <p className="font-medium truncate capitalize">{template.name}</p>
               {template.description && (

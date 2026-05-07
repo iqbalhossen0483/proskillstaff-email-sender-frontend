@@ -1,25 +1,6 @@
 "use client";
 
-import { useState } from "react";
-import { Plus, Search, MoreHorizontal, UserCheck, UserX, KeyRound, Trash2, Edit } from "lucide-react";
-import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { RoleGuard } from "@/components/auth/RoleGuard";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -30,18 +11,46 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { UserSheet } from "@/components/users/UserSheet";
-import { TableSkeleton } from "@/components/ui/PageLoader";
-import { RoleGuard } from "@/components/auth/RoleGuard";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
-  useGetUsersQuery,
-  useSuspendUserMutation,
-  useReactivateUserMutation,
-  useDeleteUserMutation,
-  useResetUserPasswordMutation,
-} from "@/store/api/usersApi";
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
+import { TableSkeleton } from "@/components/ui/PageLoader";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { UserSheet } from "@/components/users/UserSheet";
 import { useDebounce } from "@/hooks/useDebounce";
+import {
+  useDeleteUserMutation,
+  useGetUsersQuery,
+  useReactivateUserMutation,
+  useResetUserPasswordMutation,
+  useSuspendUserMutation,
+} from "@/store/api/usersApi";
 import type { User } from "@/types/layouts";
+import {
+  Edit,
+  KeyRound,
+  MoreHorizontal,
+  Plus,
+  Search,
+  Trash2,
+  UserCheck,
+  UserX,
+} from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
 
 export default function UsersPage() {
   const [search, setSearch] = useState("");
@@ -115,7 +124,12 @@ export default function UsersPage() {
       <div className="p-6 md:p-8 max-w-7xl mx-auto space-y-6">
         <div className="flex items-center justify-between gap-4">
           <h1 className="text-2xl font-semibold">Users</h1>
-          <Button onClick={() => { setEditUser(undefined); setSheetOpen(true); }}>
+          <Button
+            onClick={() => {
+              setEditUser(undefined);
+              setSheetOpen(true);
+            }}
+          >
             <Plus className="h-4 w-4 mr-1.5" /> Create user
           </Button>
         </div>
@@ -128,10 +142,21 @@ export default function UsersPage() {
               className="pl-9"
               placeholder="Search users…"
               value={search}
-              onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setPage(1);
+              }}
             />
           </div>
-          <Select value={roleFilter} onValueChange={(v) => { if (v) { setRoleFilter(v); setPage(1); } }}>
+          <Select
+            value={roleFilter}
+            onValueChange={(v) => {
+              if (v) {
+                setRoleFilter(v);
+                setPage(1);
+              }
+            }}
+          >
             <SelectTrigger className="w-36">
               <SelectValue placeholder="Role" />
             </SelectTrigger>
@@ -141,7 +166,15 @@ export default function UsersPage() {
               <SelectItem value="super_admin">Super Admin</SelectItem>
             </SelectContent>
           </Select>
-          <Select value={statusFilter} onValueChange={(v) => { if (v) { setStatusFilter(v); setPage(1); } }}>
+          <Select
+            value={statusFilter}
+            onValueChange={(v) => {
+              if (v) {
+                setStatusFilter(v);
+                setPage(1);
+              }
+            }}
+          >
             <SelectTrigger className="w-36">
               <SelectValue placeholder="Status" />
             </SelectTrigger>
@@ -160,7 +193,9 @@ export default function UsersPage() {
               <TableSkeleton cols={5} rows={8} />
             </div>
           ) : users.length === 0 ? (
-            <div className="py-16 text-center text-muted-foreground text-sm">No users found.</div>
+            <div className="py-16 text-center text-muted-foreground text-sm">
+              No users found.
+            </div>
           ) : (
             <table className="w-full text-sm">
               <thead className="bg-muted/40">
@@ -175,41 +210,78 @@ export default function UsersPage() {
               </thead>
               <tbody>
                 {users.map((user) => (
-                  <tr key={user.id} className="border-t hover:bg-muted/20 transition-colors">
+                  <tr
+                    key={user.id}
+                    className="border-t hover:bg-muted/20 transition-colors"
+                  >
                     <td className="px-4 py-3 font-medium">{user.name}</td>
-                    <td className="px-4 py-3 text-muted-foreground">{user.email}</td>
+                    <td className="px-4 py-3 text-muted-foreground">
+                      {user.email}
+                    </td>
                     <td className="px-4 py-3">
-                      <Badge variant={user.role === "super_admin" ? "default" : "secondary"}>
+                      <Badge
+                        variant={
+                          user.role === "super_admin" ? "default" : "secondary"
+                        }
+                      >
                         {user.role === "super_admin" ? "Super Admin" : "Admin"}
                       </Badge>
                     </td>
                     <td className="px-4 py-3">
-                      <Badge variant={user.status === "active" ? "default" : "destructive"} className="capitalize">
+                      <Badge
+                        variant={
+                          user.status === "active" ? "default" : "destructive"
+                        }
+                        className="capitalize"
+                      >
                         {user.status}
                       </Badge>
                     </td>
                     <td className="px-4 py-3 text-muted-foreground">
-                      {user.last_login_at ? new Date(user.last_login_at).toLocaleDateString() : "Never"}
+                      {user.last_login_at
+                        ? new Date(user.last_login_at).toLocaleDateString()
+                        : "Never"}
                     </td>
                     <td className="px-4 py-3">
                       <DropdownMenu>
-                        <DropdownMenuTrigger render={<Button variant="ghost" size="icon" className="h-8 w-8" />}>
+                        <DropdownMenuTrigger
+                          render={
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8"
+                            />
+                          }
+                        >
                           <MoreHorizontal className="h-4 w-4" />
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => { setEditUser(user); setSheetOpen(true); }}>
+                          <DropdownMenuItem
+                            onClick={() => {
+                              setEditUser(user);
+                              setSheetOpen(true);
+                            }}
+                          >
                             <Edit className="h-3.5 w-3.5 mr-2" /> Edit
                           </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleResetPassword(user)}>
-                            <KeyRound className="h-3.5 w-3.5 mr-2" /> Reset password
+                          <DropdownMenuItem
+                            onClick={() => handleResetPassword(user)}
+                          >
+                            <KeyRound className="h-3.5 w-3.5 mr-2" /> Reset
+                            password
                           </DropdownMenuItem>
                           {user.status === "active" ? (
-                            <DropdownMenuItem onClick={() => handleSuspend(user)}>
+                            <DropdownMenuItem
+                              onClick={() => handleSuspend(user)}
+                            >
                               <UserX className="h-3.5 w-3.5 mr-2" /> Suspend
                             </DropdownMenuItem>
                           ) : (
-                            <DropdownMenuItem onClick={() => handleReactivate(user)}>
-                              <UserCheck className="h-3.5 w-3.5 mr-2" /> Reactivate
+                            <DropdownMenuItem
+                              onClick={() => handleReactivate(user)}
+                            >
+                              <UserCheck className="h-3.5 w-3.5 mr-2" />{" "}
+                              Reactivate
                             </DropdownMenuItem>
                           )}
                           <DropdownMenuSeparator />
@@ -232,11 +304,23 @@ export default function UsersPage() {
         {/* Pagination */}
         {totalPages > 1 && (
           <div className="flex items-center justify-center gap-2">
-            <Button variant="outline" size="sm" disabled={page === 1} onClick={() => setPage(p => p - 1)}>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={page === 1}
+              onClick={() => setPage((p) => p - 1)}
+            >
               Previous
             </Button>
-            <span className="text-sm text-muted-foreground">Page {page} of {totalPages}</span>
-            <Button variant="outline" size="sm" disabled={page === totalPages} onClick={() => setPage(p => p + 1)}>
+            <span className="text-sm text-muted-foreground">
+              Page {page} of {totalPages}
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={page === totalPages}
+              onClick={() => setPage((p) => p + 1)}
+            >
               Next
             </Button>
           </div>
@@ -244,18 +328,18 @@ export default function UsersPage() {
       </div>
 
       {/* Modals */}
-      <UserSheet
-        open={sheetOpen}
-        onOpenChange={setSheetOpen}
-        user={editUser}
-      />
+      <UserSheet open={sheetOpen} onOpenChange={setSheetOpen} user={editUser} />
 
-      <AlertDialog open={!!deleteTarget} onOpenChange={(o) => !o && setDeleteTarget(null)}>
+      <AlertDialog
+        open={!!deleteTarget}
+        onOpenChange={(o) => !o && setDeleteTarget(null)}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete {deleteTarget?.name}?</AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. The user will be permanently removed.
+              This action cannot be undone. The user will be permanently
+              removed.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
