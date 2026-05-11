@@ -1,5 +1,6 @@
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
+import { UserRole } from "./types/layouts";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   providers: [
@@ -20,7 +21,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
               email: credentials.email,
               password: credentials.password,
             }),
-          }
+          },
         );
 
         if (!res.ok) return null;
@@ -40,14 +41,14 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id as string;
-        token.role = (user as { role: string }).role;
+        token.role = (user as { role: UserRole }).role;
         token.accessToken = (user as { accessToken: string }).accessToken;
       }
       return token;
     },
     async session({ session, token }) {
       session.user.id = token.id as string;
-      session.user.role = token.role as string;
+      session.user.role = token.role as UserRole;
       session.accessToken = token.accessToken as string;
       return session;
     },
